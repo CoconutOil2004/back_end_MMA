@@ -2,15 +2,16 @@
 const express = require("express");
 const userRoute = express.Router();
 
-const { protect } = require("../src/middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 const {
   registerUser,
   loginUser,
   getProfile,
-} = require("../src/controller/userController");
+  forgotPassword,
+} = require("../controller/userController");
 
 userRoute.post("/register", registerUser);
 userRoute.post("/login", loginUser);
 userRoute.get("/profile", protect, getProfile);
-
+userRoute.post("/forgot-password", forgotPassword);
 module.exports = userRoute;
