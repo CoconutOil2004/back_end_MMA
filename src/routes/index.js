@@ -1,8 +1,13 @@
 const express = require("express");
 const userRoute = require("./userRoute");
 const postRouter = require("./postRoute");
+const conversationRouter = require("./conversationRoute");
+const messageRouter = require("./messageRoute");
 
 const router = express.Router();
 router.use("/users", userRoute);
 router.use("/posts", postRouter);
+router.use("/conversations", conversationRouter);
+router.use("/messages", messageRouter);
+
 module.exports = router;
