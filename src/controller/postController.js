@@ -159,3 +159,31 @@ exports.likePost = async (req, res) => {
     res.status(500).json({ message: "Lỗi khi like bài đăng", error });
   }
 };
+// ---------- LẤY DANH SÁCH BÀI ĐĂNG CỦA 1 USER ----------
+exports.getMyPosts = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    console.log(userId); // Lấy từ JWT token
+
+    const posts = await Post.find({ userId: userId })
+      .sort({ createdAt: -1 })
+      .populate("userId", "name email avatar phone");
+
+    return res.status(200).json({
+      success: true,
+      message:
+        posts.length > 0
+          ? "Lấy danh sách bài đăng thành công"
+          : "Bạn chưa có bài đăng nào",
+      data: posts,
+      total: posts.length,
+    });
+  } catch (error) {
+    console.error("Error in getMyPosts:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy bài đăng",
+      error: error.message,
+    });
+  }
+};
