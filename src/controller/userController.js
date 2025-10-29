@@ -52,6 +52,7 @@ exports.registerUser = async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         phone: newUser.phone,
+        avatar: newUser.avatar,
       },
     });
   } catch (error) {
@@ -96,6 +97,7 @@ exports.loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        avatar: user.avatar,
       },
     });
   } catch (error) {
@@ -103,7 +105,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// ---------- GET PROFILE (tuỳ chọn) ----------
+// ---------- GET PROFILE ----------
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -112,6 +114,54 @@ exports.getProfile = async (req, res) => {
     res
       .status(500)
       .json({ message: "Không thể lấy thông tin người dùng", error });
+  }
+};
+
+// ---------- UPDATE AVATAR ----------
+exports.updateAvatar = async (req, res) => {
+  try {
+    const { avatar } = req.body;
+    const userId = req.user.id;
+
+    if (!avatar) {
+      return res.status(400).json({
+        success: false,
+        message: "Avatar URL is required",
+      });
+    }
+
+    // Update avatar trong database
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { avatar: avatar },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Avatar updated successfully",
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        avatar: updatedUser.avatar,
+      },
+    });
+  } catch (error) {
+    console.error("Update avatar error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
