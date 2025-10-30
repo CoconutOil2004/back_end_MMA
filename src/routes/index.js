@@ -3,11 +3,11 @@ const userRoute = require("./userRoute");
 const postRouter = require("./postRoute");
 const conversationRouter = require("./conversationRoute");
 const messageRouter = require("./messageRoute");
-
+const notificationRouter = require("./notificationRoute");
 const router = express.Router();
 router.use("/users", userRoute);
 router.use("/posts", postRouter);
 router.use("/conversations", conversationRouter);
 router.use("/messages", messageRouter);
-
+router.use("/notifications",notificationRouter)
 module.exports = router;
