@@ -13,12 +13,11 @@ app.use(express.json());
 // 🧭 Routes
 app.use("/", router);
 
-// 🗄️ Kết nối MongoDB (chỉ gọi 1 lần khi khởi động server)
+// 🗄️ Kết nối MongoDB
 connectDB();
 
-// 🚫 KHÔNG dùng app.listen() khi deploy lên Vercel
-// const port = process.env.PORT || 9999;
-// app.listen(port, () => console.log(`Running on ${port}`));
-
-// ✅ Thay bằng export để Vercel tự khởi chạy
-module.exports = app;
+// 🚀 Chạy server local
+const PORT = process.env.PORT || 9999;
+app.listen(PORT, () => {
+  console.log(`✅ Server is running on http://localhost:${PORT}`);
+});
