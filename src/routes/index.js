@@ -9,5 +9,5 @@ router.use("/users", userRoute);
 router.use("/posts", postRouter);
 router.use("/conversations", conversationRouter);
 router.use("/messages", messageRouter);
-router.use("/notifications",notificationRouter)
+router.use("/notifications", notificationRouter);
 module.exports = router;
