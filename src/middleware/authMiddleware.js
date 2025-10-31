@@ -20,3 +20,12 @@ exports.protect = async (req, res, next) => {
       .json({ message: "Token không hợp lệ hoặc đã hết hạn.", error });
   }
 };
+
+exports.verifyAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res
+      .status(403)
+      .json({ message: "Bạn không có quyền truy cập. Chỉ admin được phép." });
+  }
+  next();
+};
