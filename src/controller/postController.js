@@ -1,7 +1,6 @@
 //const Post = require("../model/Post");
 const User = require("../model/User");
 const Post = require("../model/Post");
-
 // ---------- TẠO BÀI ĐĂNG ----------
 exports.createPost = async (req, res) => {
   try {
@@ -11,8 +10,6 @@ exports.createPost = async (req, res) => {
     if (!type || !title || !description || !imageUrl) {
       return res.status(400).json({ message: "Thiếu thông tin bắt buộc." });
     }
-
-    // Tạo bài đăng mới
     const newPost = await Post.create({
       userId: req.user.id,
       type,
@@ -22,10 +19,7 @@ exports.createPost = async (req, res) => {
       location,
       contactPhone,
     });
-
-    // Populate để lấy thông tin người đăng (chỉ các trường cần thiết)
     const populatedPost = await newPost.populate("userId", "name email avatar");
-
     res.status(201).json({
       message: "Đăng bài thành công!",
       post: {
@@ -47,20 +41,17 @@ exports.createPost = async (req, res) => {
     res.status(500).json({ message: "Lỗi khi tạo bài đăng", error });
   }
 };
-
-// ---------- LẤY DANH SÁCH BÀI ĐĂNG ----------
 exports.getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find()
       .populate("userId", "name email avatar phone")
-      .sort({ createdAt: -1 }); // mới nhất trước
+      .sort({ createdAt: -1 });
 
     res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ message: "Lỗi khi lấy danh sách bài đăng", error });
   }
 };
-
 // ---------- LẤY CHI TIẾT 1 BÀI ĐĂNG ----------
 exports.getPostById = async (req, res) => {
   try {
@@ -163,8 +154,6 @@ exports.likePost = async (req, res) => {
 exports.getMyPosts = async (req, res) => {
   try {
     const userId = req.user?.id;
-    console.log(userId); // Lấy từ JWT token
-
     const posts = await Post.find({ userId: userId })
       .sort({ createdAt: -1 })
       .populate("userId", "name email avatar phone");
