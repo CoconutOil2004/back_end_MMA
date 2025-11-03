@@ -19,6 +19,8 @@ const UserSchema = new Schema(
     phone: { type: String }, // người khác có thể liên hệ trực tiếp
     verified: { type: Boolean, default: false },
     role: { type: String, enum: ["user", "admin"], default: "user" },
+    bio: { type: String, default: "" }, // mô tả ngắn về bản thân
+    education: { type: String, default: "" }, // học vấn (VD: "FPT University - Software Engineering")
   },
   { timestamps: true, versionKey: false, collection: "users" }
 );
