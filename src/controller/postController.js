@@ -1,15 +1,20 @@
 //const Post = require("../model/Post");
 const User = require("../model/User");
 const Post = require("../model/Post");
+const Notification = require("../model/Notification")
+const { findPotentialMatches } = require("./aiController");
 // ---------- TẠO BÀI ĐĂNG ----------
 exports.createPost = async (req, res) => {
   try {
     const { type, title, description, imageUrl, location, contactPhone } =
       req.body;
 
+    // 🧩 1. Kiểm tra dữ liệu bắt buộc
     if (!type || !title || !description || !imageUrl) {
       return res.status(400).json({ message: "Thiếu thông tin bắt buộc." });
     }
+
+    // 🧩 2. Tạo bài đăng mới
     const newPost = await Post.create({
       userId: req.user.id,
       type,
@@ -19,9 +24,41 @@ exports.createPost = async (req, res) => {
       location,
       contactPhone,
     });
+
+    // 🧩 3. Populate thông tin user đăng bài
     const populatedPost = await newPost.populate("userId", "name email avatar");
-    res.status(201).json({
-      message: "Đăng bài thành công!",
+
+    // 🧩 4. Gọi AI để quét bài trùng khớp
+    const matchedPost = await findPotentialMatches(newPost);
+
+    // 🧩 5. Nếu tìm thấy bài trùng khớp
+    if (matchedPost) {
+      // cập nhật trạng thái hai bài
+      await Post.findByIdAndUpdate(newPost._id, {
+        status: "matched",
+        matchedPostId: matchedPost._id,
+      });
+      await Post.findByIdAndUpdate(matchedPost._id, {
+        status: "matched",
+        matchedPostId: newPost._id,
+      });
+
+      // Gửi thông báo cho chủ bài đăng kia
+      await Notification.create({
+        receiverId: matchedPost.userId,
+        senderId: req.user.id,
+        type: "match_found",
+        relatedPostId: matchedPost._id,
+        title: "Đã tìm thấy bài đăng trùng khớp!",
+        message: `Hệ thống phát hiện bài đăng "${matchedPost.title}" trùng với bài bạn vừa đăng.`,
+      });
+    }
+
+    // 🧩 6. Trả về phản hồi cho client
+    return res.status(201).json({
+      message: matchedPost
+        ? "Đăng bài thành công và đã tìm thấy bài trùng khớp!"
+        : "Đăng bài thành công!",
       post: {
         id: populatedPost._id,
         title: populatedPost.title,
@@ -36,9 +73,24 @@ exports.createPost = async (req, res) => {
           avatar: populatedPost.userId.avatar,
         },
       },
+      // 👇 chỉ gửi nếu có match
+      matchedPost: matchedPost
+        ? {
+            id: matchedPost._id,
+            title: matchedPost.title,
+            description: matchedPost.description,
+            imageUrl: matchedPost.imageUrl,
+            type: matchedPost.type,
+            contactPhone: matchedPost.contactPhone,
+            createdAt: matchedPost.createdAt,
+          }
+        : null,
     });
   } catch (error) {
-    res.status(500).json({ message: "Lỗi khi tạo bài đăng", error });
+    console.error("❌ Lỗi khi tạo bài đăng:", error);
+    res
+      .status(500)
+      .json({ message: "Lỗi khi tạo bài đăng", error: error.message });
   }
 };
 exports.getAllPosts = async (req, res) => {
