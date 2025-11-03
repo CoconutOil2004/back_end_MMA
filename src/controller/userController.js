@@ -197,3 +197,57 @@ exports.forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Lỗi server khi đặt lại mật khẩu", error });
   }
 };
+// ---------- UPDATE PROFILE ----------
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, phone, bio, education } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { name, phone, bio, education },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng." });
+    }
+
+    res.status(200).json({
+      message: "Cập nhật hồ sơ thành công!",
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server khi cập nhật hồ sơ", error });
+  }
+};
+
+// ---------- CHANGE PASSWORD ----------
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: "Vui lòng nhập đủ mật khẩu cũ và mới." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ message: "Không tìm thấy người dùng." });
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Mật khẩu cũ không đúng." });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.status(200).json({ message: "Đổi mật khẩu thành công!" });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server khi đổi mật khẩu", error });
+  }
+};
