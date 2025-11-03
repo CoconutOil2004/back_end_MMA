@@ -11,6 +11,7 @@ const {
   forgotPassword,
   updateProfile,
   changePassword,
+  searchUsers,
 } = require("../controller/userController");
 
 userRoute.post("/register", registerUser);
@@ -20,4 +21,5 @@ userRoute.patch("/update-avatar", protect, updateAvatar);
 userRoute.post("/forgot-password", protect, forgotPassword);
 userRoute.put("/update", protect, updateProfile);
 userRoute.put("/change-pass", protect, changePassword);
+userRoute.get("/search", protect, searchUsers);
 module.exports = userRoute;

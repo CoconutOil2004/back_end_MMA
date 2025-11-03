@@ -9,19 +9,40 @@ exports.createOrGetConversation = async (req, res) => {
   try {
     const { senderId, receiverId } = req.body;
 
-    // Tìm xem đã có hội thoại giữa 2 người này chưa
+    if (!senderId || !receiverId) {
+      return res
+        .status(400)
+        .json({ message: "Thiếu senderId hoặc receiverId" });
+    }
+
+    if (senderId === receiverId) {
+      return res
+        .status(400)
+        .json({ message: "Không thể tạo hội thoại với chính mình." });
+    }
+
+    // 🔍 Tìm hội thoại có sẵn
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] },
-    });
+    }).populate("participants", "name email avatar");
 
+    // ➕ Nếu chưa có, tạo mới
     if (!conversation) {
       conversation = await Conversation.create({
         participants: [senderId, receiverId],
       });
+      conversation = await conversation.populate(
+        "participants",
+        "name email avatar"
+      );
+      console.log(`💬 Tạo hội thoại mới giữa ${senderId} và ${receiverId}`);
+    } else {
+      console.log(`✅ Hội thoại đã tồn tại giữa ${senderId} và ${receiverId}`);
     }
 
     res.status(200).json(conversation);
   } catch (error) {
+    console.error("❌ Lỗi khi tạo/lấy hội thoại:", error);
     res.status(500).json({
       message: "Lỗi khi tạo hoặc lấy hội thoại",
       error: error.message,

@@ -251,3 +251,36 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({ message: "Lỗi server khi đổi mật khẩu", error });
   }
 };
+// ---------- SEARCH USER ----------
+exports.searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 2) {
+      return res.status(400).json({ message: "Vui lòng nhập từ khóa tìm kiếm (ít nhất 2 ký tự)." });
+    }
+    const regex = new RegExp(q.trim(), "i"); 
+    const users = await User.find({
+      $and: [
+        {
+          $or: [
+            { name: regex },
+            { email: regex },
+            { phone: regex },
+          ],
+        },
+        { _id: { $ne: req.user?.id } }, 
+      ],
+    }).select("name email phone avatar");
+
+    if (!users.length) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng nào phù hợp." });
+    }
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("❌ Lỗi khi tìm kiếm người dùng:", error);
+    res.status(500).json({
+      message: "Lỗi server khi tìm kiếm người dùng.",
+      error: error.message,
+    });
+  }
+};
